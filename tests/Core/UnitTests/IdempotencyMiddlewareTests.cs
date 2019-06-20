@@ -52,6 +52,9 @@ namespace Idempotency.Core.UnitTests
             var idempotencyKey = Guid.NewGuid().ToString();
             var contextMock = new Mock<HttpContext>();
             var responseBody = new MemoryStream();
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             contextMock.Setup(x => x.Request.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
                 .Returns(true)
                 .Verifiable();
@@ -102,6 +105,9 @@ namespace Idempotency.Core.UnitTests
             var idempotencyKey = Guid.NewGuid().ToString();
             var contextMock = new Mock<HttpContext>();
             var responseBody = new MemoryStream();
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             contextMock.Setup(x => x.Request.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
                 .Returns(true)
                 .Verifiable();
@@ -142,6 +148,9 @@ namespace Idempotency.Core.UnitTests
             var idempotencyRegister = IdempotencyRegister.Of(idempotencyKey);
             var contextMock = new Mock<HttpContext>();
             var responseMock = new Mock<HttpResponse>();
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             contextMock.SetupGet(x => x.Response)
                 .Returns(responseMock.Object)
                 .Verifiable();
@@ -194,6 +203,9 @@ namespace Idempotency.Core.UnitTests
             contextMock.SetupGet(x => x.Response.Body)
                 .Returns(responseBody)
                 .Verifiable();
+            requestMock.SetupGet(x => x.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             requestMock.Setup(x => x.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
                 .Returns(true)
                 .Verifiable();
@@ -243,6 +255,9 @@ namespace Idempotency.Core.UnitTests
             contextMock.SetupGet(x => x.Response.Body)
                 .Returns(body)
                 .Verifiable();
+            requestMock.SetupGet(x => x.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             requestMock.Setup(x => x.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
                 .Returns(true)
                 .Verifiable();
@@ -286,6 +301,9 @@ namespace Idempotency.Core.UnitTests
             var contextMock = new Mock<HttpContext>();
             var responseMock = new Mock<HttpResponse>();
             var responseBody = new MemoryStream();
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             contextMock.SetupGet(x => x.Response)
                 .Returns(responseMock.Object)
                 .Verifiable();
@@ -330,6 +348,9 @@ namespace Idempotency.Core.UnitTests
         {
             var idempotencyKey = Guid.NewGuid().ToString();
             var contextMock = new Mock<HttpContext>();
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             contextMock.Setup(x => x.Request.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
                 .Returns(true)
                 .Verifiable();
@@ -366,6 +387,9 @@ namespace Idempotency.Core.UnitTests
             var idempotencyKey = Guid.NewGuid().ToString();
             var idempotencyRegister = IdempotencyRegister.Of(idempotencyKey);
             var contextMock = new Mock<HttpContext>();
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             contextMock.Setup(x => x.Request.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
                 .Returns(true)
                 .Verifiable();
@@ -402,6 +426,9 @@ namespace Idempotency.Core.UnitTests
                 new MemoryStream(Encoding.UTF8.GetBytes("Successful saved message")));
             var responseBody = new MemoryStream();
             var contextMock = new Mock<HttpContext>();
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             contextMock.Setup(x => x.Request.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
                 .Returns(true)
                 .Verifiable();
@@ -432,6 +459,28 @@ namespace Idempotency.Core.UnitTests
 
         [Trait("Category", "Cases")]
         [Fact(DisplayName =
+            @"GIVEN Request, WHEN Idempotency-Key is avaiable, AND is a GET Method, SHOULD call application")]
+        public async Task GivenRequestWhenIdempotencyKeyAvaiableAndGetShouldCallApplication()
+        {
+            var contextMock = new Mock<HttpContext>();
+            contextMock.Setup(x => x.Request.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
+                .Returns(true)
+                .Verifiable();
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Get)
+                .Verifiable();
+            _nextMock.Setup(x => x.Invoke(contextMock.Object))
+                .Returns(Task.CompletedTask)
+                .Verifiable();
+
+            await _middleware.InvokeAsync(contextMock.Object);
+
+            contextMock.VerifyAll();
+            _nextMock.VerifyAll();
+        }
+
+        [Trait("Category", "Cases")]
+        [Fact(DisplayName =
             @"GIVEN Request, WHEN Idempotency-Key is avaiable AND execution is successful, SHOULD save key and response from application")]
         public async Task
             GivenRequestWhenIdempotencyKeyIsAvaiableAndExecutionSuccessfulShouldSaveKeyAndResponseFromApplication()
@@ -439,6 +488,9 @@ namespace Idempotency.Core.UnitTests
             var idempotencyKey = Guid.NewGuid().ToString();
             var contextMock = new Mock<HttpContext>();
             var body = new MemoryStream(Encoding.UTF8.GetBytes("Successful Message"));
+            contextMock.SetupGet(x => x.Request.Method)
+                .Returns(HttpMethods.Post)
+                .Verifiable();
             contextMock.Setup(x => x.Request.Headers.ContainsKey(IdempotencyMiddleware.IDEMPOTENCY_HEADER_KEY))
                 .Returns(true)
                 .Verifiable();

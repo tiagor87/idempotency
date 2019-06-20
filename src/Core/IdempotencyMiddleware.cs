@@ -27,7 +27,8 @@ namespace Idempotency.Core
                 var logger = scope.ServiceProvider.GetService<ILogger>();
                 var repository = scope.ServiceProvider.GetService<IIdempotencyRepository>();
 
-                if (!context.Request.Headers.ContainsKey(IDEMPOTENCY_HEADER_KEY))
+                if (!context.Request.Headers.ContainsKey(IDEMPOTENCY_HEADER_KEY) ||
+                    HttpMethods.IsGet(context.Request.Method))
                 {
                     await _next.Invoke(context);
                     return;
