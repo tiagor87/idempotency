@@ -54,7 +54,7 @@ namespace Idempotency.Core
                         catch (Exception ex)
                         {
                             await repository.RemoveAsync(idempotencyKey);
-                            logger.WriteException(idempotencyKey, ex);
+                            logger?.WriteException(idempotencyKey, ex);
                             throw ex;
                         }
 
