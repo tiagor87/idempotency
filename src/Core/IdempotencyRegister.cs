@@ -28,6 +28,21 @@ namespace Idempotency.Core
 
         public static IdempotencyRegister Of(string key, int statusCode, Stream stream)
         {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (statusCode < 0 || statusCode >= 600)
+            {
+                throw new ArgumentOutOfRangeException(nameof(key));
+            }
+
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
             using (var reader = new StreamReader(stream))
             {
                 return new IdempotencyRegister(key, statusCode, reader.ReadToEnd());
