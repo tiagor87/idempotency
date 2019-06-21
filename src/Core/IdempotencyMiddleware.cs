@@ -55,7 +55,7 @@ namespace Idempotency.Core
                         {
                             await repository.RemoveAsync(idempotencyKey);
                             logger.WriteException(idempotencyKey, ex);
-                            throw;
+                            throw ex;
                         }
 
                         if (context.Response.StatusCode >= (int) HttpStatusCode.BadRequest

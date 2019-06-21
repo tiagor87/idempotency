@@ -230,6 +230,52 @@ namespace Idempotency.Core.UnitTests
             _loggerMock.VerifyAll();
         }
 
+        [Trait("Category", "Cases")]
+        [Fact(DisplayName =
+            "GIVEN Request, WHEN execution successful AND NoContent AND Content Type was NULL, SHOULD save key from application")]
+        public async Task GivenRequestWhenExecutionSuccessfulAndNoContentShouldSaveKeyFromApplication()
+        {
+            var idempotencyKey = Guid.NewGuid().ToString();
+            var contextMock = new Mock<HttpContext>();
+            var requestMock = new Mock<HttpRequest>();
+            var body = new MemoryStream();
+            _keyReaderMock.Setup(x => x.Read(It.IsAny<HttpRequest>()))
+                .Returns(idempotencyKey)
+                .Verifiable();
+            contextMock.Setup(x => x.Request)
+                .Returns(requestMock.Object)
+                .Verifiable();
+            contextMock.SetupGet(x => x.Response.StatusCode)
+                .Returns((int) HttpStatusCode.NoContent)
+                .Verifiable();
+            contextMock.SetupGet(x => x.Response.ContentType)
+                .Returns((string) null)
+                .Verifiable();
+            contextMock.SetupGet(x => x.Response.Body)
+                .Returns(body)
+                .Verifiable();
+            requestMock.SetupGet(x => x.Method)
+                .Returns(HttpMethods.Delete)
+                .Verifiable();
+            _repositoryMock.Setup(x => x.TryAddAsync(idempotencyKey))
+                .ReturnsAsync(true)
+                .Verifiable();
+            _repositoryMock.Setup(x => x.UpdateAsync(idempotencyKey, It.IsAny<IdempotencyRegister>()))
+                .Returns(Task.CompletedTask)
+                .Verifiable();
+            _nextMock.Setup(x => x.Invoke(contextMock.Object))
+                .Returns(Task.CompletedTask)
+                .Verifiable();
+
+            await _middleware.InvokeAsync(contextMock.Object);
+
+            contextMock.VerifyAll();
+            requestMock.VerifyAll();
+            _keyReaderMock.VerifyAll();
+            _repositoryMock.VerifyAll();
+            _nextMock.VerifyAll();
+        }
+
         [Trait("Category", "Logging")]
         [Fact(DisplayName =
             "GIVEN Request, WHEN execution successful, SHOULD log key detected, AND first request, AND first request completed")]
