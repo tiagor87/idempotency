@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "Idempotency.Redis": {
+    "Idempotency.Samples.Redis": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "api/values",

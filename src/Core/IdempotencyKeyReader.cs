@@ -18,7 +18,7 @@ namespace Idempotency.Core
                 return null;
             }
 
-            return $"{request.Method}{request.Headers[headerKey]}";
+            return $"[{request.Method}] {request.Path} - {request.Headers[headerKey]}";
         }
     }
 }

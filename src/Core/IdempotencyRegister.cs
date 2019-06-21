@@ -1,21 +1,29 @@
 using System;
 using System.IO;
 using System.Net;
+using ZeroFormatter;
 
 namespace Idempotency.Core
 {
-    public sealed class IdempotencyRegister
+    [ZeroFormattable]
+    public class IdempotencyRegister
     {
-        public IdempotencyRegister(string key, int? statusCode, string body)
+        public IdempotencyRegister()
+        {
+        }
+
+        private IdempotencyRegister(string key, int? statusCode, string body) : this()
         {
             Key = key;
             StatusCode = statusCode;
             Body = body;
         }
 
-        public string Key { get; }
-        public int? StatusCode { get; }
-        public string Body { get; }
+        [Index(0)] public virtual string Key { get; protected set; }
+
+        [Index(1)] public virtual int? StatusCode { get; protected set; }
+
+        [Index(2)] public virtual string Body { get; protected set; }
 
         public static IdempotencyRegister Of(string key)
         {

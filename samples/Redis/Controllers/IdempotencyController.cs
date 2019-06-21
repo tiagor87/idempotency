@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Idempotency.Redis.Controllers
+namespace Idempotency.Samples.Redis.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -11,6 +11,13 @@ namespace Idempotency.Redis.Controllers
 
         [HttpPost]
         public IActionResult Post()
+        {
+            Interlocked.Increment(ref _calls);
+            return StatusCode(201, _calls);
+        }
+
+        [HttpPost("other")]
+        public IActionResult PostOther()
         {
             Interlocked.Increment(ref _calls);
             return StatusCode(201, _calls);

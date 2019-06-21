@@ -1,6 +1,5 @@
 ﻿using System.Net;
-using Idempotency.Core;
-using Idempotency.Redis.Infrastructure;
+using Idempotency.Redis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -9,9 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using ServiceStack.Redis;
 
-namespace Idempotency.Redis
+namespace Idempotency.Samples.Redis
 {
     public class Startup
     {
@@ -26,14 +24,7 @@ namespace Idempotency.Redis
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddSingleton(new RedisManagerPool(Configuration.GetConnectionString("Redis")));
-            services.AddScoped(provider =>
-            {
-                var manager = provider.GetService<RedisManagerPool>();
-                return manager.GetClient();
-            });
-            services.AddScoped<IIdempotencyRepository, RedisRepository>();
-            services.AddScoped<IIdempotencyKeyReader, IdempotencyKeyReader>();
+            services.AddRedisIdempotency(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,8 +41,6 @@ namespace Idempotency.Redis
             }
 
             app.UseHttpsRedirection();
-            app.UseMiddleware<IdempotencyMiddleware>();
-            app.UseMvc();
             app.UseExceptionHandler(new ExceptionHandlerOptions()
             {
                 ExceptionHandler = async context =>
@@ -66,6 +55,8 @@ namespace Idempotency.Redis
                     }
                 }
             });
+            app.UseIdempotency();
+            app.UseMvc();
         }
     }
 }

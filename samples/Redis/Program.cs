@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace Idempotency.Redis
+namespace Idempotency.Samples.Redis
 {
     public class Program
     {

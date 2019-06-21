@@ -18,12 +18,13 @@ namespace Idempotency.Core.UnitTests
         private readonly Mock<HttpRequest> _requestMock;
 
         [Trait("Category", "Cases")]
-        [Theory(DisplayName = @"GIVEN Request, WHEN Idempotency-Key is avaiable, SHOULD concat Request Method and Key")]
-        [InlineData(nameof(HttpMethods.Post))]
-        [InlineData(nameof(HttpMethods.Put))]
-        [InlineData(nameof(HttpMethods.Patch))]
-        [InlineData(nameof(HttpMethods.Delete))]
-        public void GivenRequestWhenIdempotencyKeyAvaiableShouldConcatMethodAndKey(string method)
+        [Theory(DisplayName =
+            @"GIVEN Request, WHEN Idempotency-Key is avaiable, SHOULD concat request path, method and Key")]
+        [InlineData("/path/to/post", nameof(HttpMethods.Post))]
+        [InlineData("/path/to/put", nameof(HttpMethods.Put))]
+        [InlineData("/path/to/patch", nameof(HttpMethods.Patch))]
+        [InlineData("/path/to/delete", nameof(HttpMethods.Delete))]
+        public void GivenRequestWhenIdempotencyKeyAvaiableShouldConcatMethodAndKey(string path, string method)
         {
             var key = Guid.NewGuid().ToString();
             _requestMock.SetupGet(x => x.Headers.Keys)
@@ -32,6 +33,9 @@ namespace Idempotency.Core.UnitTests
             _requestMock.SetupGet(x => x.Headers[IdempotencyKeyReader.IDEMPOTENCY_KEY])
                 .Returns(key)
                 .Verifiable();
+            _requestMock.SetupGet(x => x.Path)
+                .Returns(path)
+                .Verifiable();
             _requestMock.SetupGet(x => x.Method)
                 .Returns(method)
                 .Verifiable();
@@ -39,7 +43,8 @@ namespace Idempotency.Core.UnitTests
             var idempotencyKey = _keyReader.Read(_requestMock.Object);
 
             idempotencyKey.Should()
-                .Contain(method)
+                .Contain(path)
+                .And.Contain(method)
                 .And.Contain(key);
             _requestMock.VerifyAll();
         }
