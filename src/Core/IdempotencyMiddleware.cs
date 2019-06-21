@@ -10,7 +10,6 @@ namespace Idempotency.Core
 {
     public class IdempotencyMiddleware
     {
-        public const string IDEMPOTENCY_HEADER_KEY = "Idempotency-Key";
         private readonly RequestDelegate _next;
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
@@ -26,15 +25,17 @@ namespace Idempotency.Core
             {
                 var logger = scope.ServiceProvider.GetService<ILogger>();
                 var repository = scope.ServiceProvider.GetService<IIdempotencyRepository>();
+                var keyReader = scope.ServiceProvider.GetService<IIdempotencyKeyReader>();
 
-                if (!context.Request.Headers.ContainsKey(IDEMPOTENCY_HEADER_KEY) ||
+                var idempotencyKey = keyReader.Read(context.Request);
+
+                if (string.IsNullOrWhiteSpace(idempotencyKey) ||
                     HttpMethods.IsGet(context.Request.Method))
                 {
                     await _next.Invoke(context);
                     return;
                 }
 
-                var idempotencyKey = context.Request.Headers[IDEMPOTENCY_HEADER_KEY];
                 logger?.WriteInformation(idempotencyKey, "Idempotency: Key detected.");
                 if (await repository.TryAddAsync(idempotencyKey))
                 {
@@ -58,7 +59,8 @@ namespace Idempotency.Core
                         }
 
                         if (context.Response.StatusCode >= (int) HttpStatusCode.BadRequest
-                            || !context.Response.ContentType.Contains("application/json"))
+                            || context.Response.ContentType != null
+                            && !context.Response.ContentType.Contains("application/json"))
                         {
                             await repository.RemoveAsync(idempotencyKey);
                             logger?.WriteInformation(idempotencyKey, "Idempotency: First request failed.");

@@ -33,6 +33,7 @@ namespace Idempotency.Redis
                 return manager.GetClient();
             });
             services.AddScoped<IIdempotencyRepository, RedisRepository>();
+            services.AddScoped<IIdempotencyKeyReader, IdempotencyKeyReader>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
