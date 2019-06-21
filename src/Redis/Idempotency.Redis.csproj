@@ -2,6 +2,12 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <Title>Idempotency Redis</Title>
+        <Authors>tiagor87@gmail.com</Authors>
+        <Description>Add idempotency using Redis Key-Value to control duplicated Requests</Description>
+        <PackageProjectUrl>https://github.com/tiagor87/idempotency</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/tiagor87/idempotency</RepositoryUrl>
+        <PackageTags>idempotency redis netcore dotnet</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
