@@ -336,7 +336,7 @@ namespace Idempotency.Core.UnitTests
             var idempotencyKey = Guid.NewGuid().ToString();
             var idempotencyRegister = IdempotencyRegister.Of(
                 idempotencyKey,
-                (int) HttpStatusCode.OK,
+                HttpStatusCode.OK,
                 new MemoryStream(Encoding.UTF8.GetBytes("Message cached.")));
             var contextMock = new Mock<HttpContext>();
             var responseMock = new Mock<HttpResponse>();
@@ -456,7 +456,7 @@ namespace Idempotency.Core.UnitTests
             var idempotencyKey = Guid.NewGuid().ToString();
             var idempotencyRegister = IdempotencyRegister.Of(
                 idempotencyKey,
-                (int) HttpStatusCode.OK,
+                HttpStatusCode.OK,
                 new MemoryStream(Encoding.UTF8.GetBytes("Successful saved message")));
             var responseBody = new MemoryStream();
             var contextMock = new Mock<HttpContext>();

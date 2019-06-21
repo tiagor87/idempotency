@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using FluentAssertions;
 using Xunit;
@@ -26,11 +27,16 @@ namespace Idempotency.Core.UnitTests
         [Trait("Category", "Validation")]
         [Theory(DisplayName =
             "GIVEN IdempotencyRegister, WHEN instantiate with status code and Stream, SHOULD returns instance with key, status code and body set")]
-        [InlineData("key", 200, "A body message")]
-        [InlineData("another key", 201, "Another body message")]
+        [InlineData("key", HttpStatusCode.OK, "A body message")]
+        [InlineData("another key", HttpStatusCode.Created, "Another body message")]
+        [InlineData("just another key 2", HttpStatusCode.Accepted, "Just Another body message")]
+        [InlineData("just another key 3", HttpStatusCode.PartialContent, "Just Another body message 2")]
+        [InlineData("just another key 4", HttpStatusCode.MultiStatus, "Just Another body message 3")]
+        [InlineData("just another key 5", HttpStatusCode.AlreadyReported, "Just Another body message 4")]
+        [InlineData("just another key 6", HttpStatusCode.IMUsed, "Just Another body message 5")]
         public void
             GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamShouldReturnsInstanceWithKeyStatusCodeAndBodySet(
-                string key, int statusCode, string body)
+                string key, HttpStatusCode statusCode, string body)
         {
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(body));
 
@@ -38,7 +44,7 @@ namespace Idempotency.Core.UnitTests
 
             register.Should().NotBeNull();
             register.Key.Should().Be(key);
-            register.StatusCode.Should().Be(statusCode);
+            register.StatusCode.Should().Be((int) statusCode);
             register.Body.Should().Be(body);
         }
 
@@ -65,7 +71,7 @@ namespace Idempotency.Core.UnitTests
             GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamAndKeyIsEmptyShouldThrowsArgumentNullException(
                 string key)
         {
-            Func<IdempotencyRegister> action = () => IdempotencyRegister.Of(key, 200, new MemoryStream());
+            Func<IdempotencyRegister> action = () => IdempotencyRegister.Of(key, HttpStatusCode.OK, new MemoryStream());
 
             action.Should().Throw<ArgumentNullException>();
         }
@@ -73,12 +79,46 @@ namespace Idempotency.Core.UnitTests
         [Trait("Category", "Validation")]
         [Theory(DisplayName =
             "GIVEN IdempotencyRegister, WHEN instantiate with status code and stream AND status code is out of range, SHOULD throws ArgumentOutOfRangeException")]
-        [InlineData(-1)]
-        [InlineData(-10)]
-        [InlineData(-100)]
+        [InlineData(HttpStatusCode.BadRequest)]
+        [InlineData(HttpStatusCode.Unauthorized)]
+        [InlineData(HttpStatusCode.PaymentRequired)]
+        [InlineData(HttpStatusCode.Forbidden)]
+        [InlineData(HttpStatusCode.NotFound)]
+        [InlineData(HttpStatusCode.MethodNotAllowed)]
+        [InlineData(HttpStatusCode.NotAcceptable)]
+        [InlineData(HttpStatusCode.ProxyAuthenticationRequired)]
+        [InlineData(HttpStatusCode.RequestTimeout)]
+        [InlineData(HttpStatusCode.Conflict)]
+        [InlineData(HttpStatusCode.Gone)]
+        [InlineData(HttpStatusCode.LengthRequired)]
+        [InlineData(HttpStatusCode.PreconditionFailed)]
+        [InlineData(HttpStatusCode.RequestEntityTooLarge)]
+        [InlineData(HttpStatusCode.RequestUriTooLong)]
+        [InlineData(HttpStatusCode.UnsupportedMediaType)]
+        [InlineData(HttpStatusCode.RequestedRangeNotSatisfiable)]
+        [InlineData(HttpStatusCode.ExpectationFailed)]
+        [InlineData(HttpStatusCode.UnprocessableEntity)]
+        [InlineData(HttpStatusCode.Locked)]
+        [InlineData(HttpStatusCode.FailedDependency)]
+        [InlineData(HttpStatusCode.UpgradeRequired)]
+        [InlineData(HttpStatusCode.PreconditionRequired)]
+        [InlineData(HttpStatusCode.TooManyRequests)]
+        [InlineData(HttpStatusCode.RequestHeaderFieldsTooLarge)]
+        [InlineData(HttpStatusCode.UnavailableForLegalReasons)]
+        [InlineData(HttpStatusCode.InternalServerError)]
+        [InlineData(HttpStatusCode.NotImplemented)]
+        [InlineData(HttpStatusCode.BadGateway)]
+        [InlineData(HttpStatusCode.ServiceUnavailable)]
+        [InlineData(HttpStatusCode.GatewayTimeout)]
+        [InlineData(HttpStatusCode.HttpVersionNotSupported)]
+        [InlineData(HttpStatusCode.VariantAlsoNegotiates)]
+        [InlineData(HttpStatusCode.InsufficientStorage)]
+        [InlineData(HttpStatusCode.LoopDetected)]
+        [InlineData(HttpStatusCode.NotExtended)]
+        [InlineData(HttpStatusCode.NetworkAuthenticationRequired)]
         public void
             GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamAndStatusCodeIsOutRangeShouldThrowsArgumentOutOfRangeException(
-                int statusCode)
+                HttpStatusCode statusCode)
         {
             Func<IdempotencyRegister> action = () => IdempotencyRegister.Of("key", statusCode, new MemoryStream());
 
@@ -91,7 +131,7 @@ namespace Idempotency.Core.UnitTests
         public void
             GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamAndStreamIsNullShouldThrowsArgumentNullException()
         {
-            Func<IdempotencyRegister> action = () => IdempotencyRegister.Of("key", 200, null);
+            Func<IdempotencyRegister> action = () => IdempotencyRegister.Of("key", HttpStatusCode.OK, null);
 
             action.Should().Throw<ArgumentNullException>();
         }

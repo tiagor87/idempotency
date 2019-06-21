@@ -2,6 +2,12 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <Title>Idempotency Core</Title>
+        <Authors>tiagor87@gmail.com</Authors>
+        <Description>Package to add idempotency feature to dotnet project</Description>
+        <PackageProjectUrl>https://github.com/tiagor87/idempotency</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/tiagor87/idempotency</RepositoryUrl>
+        <PackageTags>idempotency dotnet c# netcore</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 
 namespace Idempotency.Core
 {
@@ -26,14 +27,14 @@ namespace Idempotency.Core
             return new IdempotencyRegister(key, null, null);
         }
 
-        public static IdempotencyRegister Of(string key, int statusCode, Stream stream)
+        public static IdempotencyRegister Of(string key, HttpStatusCode statusCode, Stream stream)
         {
             if (string.IsNullOrWhiteSpace(key))
             {
                 throw new ArgumentNullException(nameof(key));
             }
 
-            if (statusCode < 0 || statusCode >= 600)
+            if (statusCode >= HttpStatusCode.BadRequest)
             {
                 throw new ArgumentOutOfRangeException(nameof(key));
             }
@@ -45,7 +46,7 @@ namespace Idempotency.Core
 
             using (var reader = new StreamReader(stream))
             {
-                return new IdempotencyRegister(key, statusCode, reader.ReadToEnd());
+                return new IdempotencyRegister(key, (int) statusCode, reader.ReadToEnd());
             }
         }
     }

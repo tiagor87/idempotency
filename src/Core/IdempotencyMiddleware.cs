@@ -67,7 +67,8 @@ namespace Idempotency.Core
                             return;
                         }
 
-                        var updatedRegister = IdempotencyRegister.Of(idempotencyKey, context.Response.StatusCode,
+                        var updatedRegister = IdempotencyRegister.Of(idempotencyKey,
+                            (HttpStatusCode) context.Response.StatusCode,
                             stream);
                         await repository.UpdateAsync(idempotencyKey, updatedRegister);
                         logger?.WriteInformation(idempotencyKey, "Idempotency: First request completed.");
