@@ -24,6 +24,7 @@ namespace Idempotency.Redis.UnitTests
 
         private readonly TestApplicationService _factory;
 
+        [Trait("Category", "Redis - Extensions")]
         [Fact(DisplayName = "GIVEN Application Builder, WHEN use Idempotency, SHOULD register middleware")]
         public async Task GivenApplicationBuilderWhenUseIdempotencyShouldRegisterMiddleware()
         {
@@ -48,6 +49,7 @@ namespace Idempotency.Redis.UnitTests
             loggerMock.VerifyAll();
         }
 
+        [Trait("Category", "Redis - Extensions")]
         [Fact(DisplayName = "GIVEN Service Collection, WHEN Add Redis Idempotency, SHOULD Register services")]
         public void GivenServiceCollectionWhenAddRedisIdempotencyShouldRegisterServices()
         {
