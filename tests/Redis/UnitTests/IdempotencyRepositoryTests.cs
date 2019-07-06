@@ -1,18 +1,8 @@
-using System;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using FluentAssertions;
-using Idempotency.Core;
-using Moq;
-using ServiceStack.Redis;
-using Xunit;
-
 namespace Idempotency.Redis.UnitTests
 {
     public class IdempotencyRepositoryTests
     {
+        /*
         public IdempotencyRepositoryTests()
         {
             _rediClientMock = new Mock<IRedisClient>();
@@ -91,5 +81,6 @@ namespace Idempotency.Redis.UnitTests
 
             _rediClientMock.VerifyAll();
         }
+        */
     }
 }

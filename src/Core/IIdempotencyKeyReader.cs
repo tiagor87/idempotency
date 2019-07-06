@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Http;
-
 namespace Idempotency.Core
 {
-    public interface IIdempotencyKeyReader
+    public interface IIdempotencyKeyReader<TRequest>
     {
-        string Read(HttpRequest request);
+        string Read(TRequest request);
     }
 }

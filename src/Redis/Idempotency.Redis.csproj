@@ -16,7 +16,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0"/>
-        <PackageReference Include="ServiceStack.Redis.Core" Version="5.5.0"/>
+        <PackageReference Include="RedLock.net" Version="2.2.0"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.0.601"/>
         <PackageReference Include="ZeroFormatter" Version="1.6.4"/>
     </ItemGroup>
 

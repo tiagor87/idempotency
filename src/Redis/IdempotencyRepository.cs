@@ -1,53 +1,57 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Idempotency.Core;
-using ServiceStack.Redis;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
+using ZeroFormatter;
 
 namespace Idempotency.Redis
 {
     public class IdempotencyRepository : IIdempotencyRepository
     {
-        private readonly IRedisClient _redisClient;
+        private readonly IDatabase _database;
 
-        public IdempotencyRepository(IRedisClient redisClient)
+        public IdempotencyRepository(IDatabase database)
         {
-            _redisClient = redisClient ?? throw new ArgumentNullException(nameof(redisClient));
+            _database = database ?? throw new ArgumentNullException(nameof(database));
         }
 
-        public Task<bool> TryAddAsync(string key)
+        public async Task<bool> TryAddAsync(string key)
         {
-            return Task.Factory.StartNew(() =>
+            if (await _database.KeyExistsAsync((RedisKey) key))
             {
-                var register = IdempotencyRegister.Of(key);
-                var data = Convert.ToBase64String(ZeroFormatter.ZeroFormatterSerializer.Serialize(register));
-                var created = _redisClient.SetValueIfNotExists(key, data);
-                return created && _redisClient.ExpireEntryIn(key, TimeSpan.FromSeconds(60));
-            });
-        }
+                return false;
+            }
 
-        public Task UpdateAsync(string key, IdempotencyRegister register)
-        {
-            return Task.Factory.StartNew(() =>
+            using (var factory = RedLockFactory.Create(new[] {new RedLockMultiplexer(_database.Multiplexer)}))
+            using (factory.CreateLock(key, TimeSpan.FromMinutes(1)))
             {
-                var data = Convert.ToBase64String(ZeroFormatter.ZeroFormatterSerializer.Serialize(register));
-                _redisClient.SetValue(key, data, TimeSpan.FromDays(1));
-            });
+                if (await _database.KeyExistsAsync((RedisKey) key))
+                {
+                    return false;
+                }
+
+                var value = Convert.ToBase64String(ZeroFormatterSerializer.Serialize(IdempotencyRegister.Of(key)));
+                return await _database.StringSetAsync(key, value, TimeSpan.FromMinutes(1), When.NotExists);
+            }
         }
 
-        public Task<IdempotencyRegister> GetAsync(string key)
+        public async Task UpdateAsync(string key, IdempotencyRegister register)
         {
-            return Task.Factory.StartNew(() =>
-            {
-                var data = Convert.FromBase64String(_redisClient.GetValue(key));
-                return data.Length == 0
-                    ? null
-                    : ZeroFormatter.ZeroFormatterSerializer.Deserialize<IdempotencyRegister>(data);
-            });
+            var value = Convert.ToBase64String(ZeroFormatterSerializer.Serialize(register));
+            await _database.StringSetAsync(key, value, TimeSpan.FromDays(1), When.Exists);
         }
 
-        public Task RemoveAsync(string key)
+        public async Task<IdempotencyRegister> GetAsync(string key)
         {
-            return Task.Factory.StartNew(() => _redisClient.Remove(key));
+            var value = await _database.StringGetAsync(key);
+            return ZeroFormatterSerializer.Deserialize<IdempotencyRegister>(Convert.FromBase64String(value));
+        }
+
+        public async Task RemoveAsync(string key)
+        {
+            await _database.KeyDeleteAsync(key);
         }
     }
 }

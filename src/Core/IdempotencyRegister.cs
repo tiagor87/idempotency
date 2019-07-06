@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Net;
 using ZeroFormatter;
 
 namespace Idempotency.Core
@@ -12,16 +11,23 @@ namespace Idempotency.Core
         {
         }
 
-        private IdempotencyRegister(string key, int? statusCode, string body) : this()
+        private IdempotencyRegister(string key, string body) : this()
         {
             Key = key;
-            StatusCode = statusCode;
+            Completed = true;
             Body = body;
+        }
+
+        private IdempotencyRegister(string key) : this()
+        {
+            Key = key;
+            Completed = null;
+            Body = null;
         }
 
         [Index(0)] public virtual string Key { get; protected set; }
 
-        [Index(1)] public virtual int? StatusCode { get; protected set; }
+        [Index(1)] public virtual bool? Completed { get; protected set; }
 
         [Index(2)] public virtual string Body { get; protected set; }
 
@@ -32,19 +38,14 @@ namespace Idempotency.Core
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return new IdempotencyRegister(key, null, null);
+            return new IdempotencyRegister(key, null);
         }
 
-        public static IdempotencyRegister Of(string key, HttpStatusCode statusCode, Stream stream)
+        public static IdempotencyRegister Of(string key, Stream stream)
         {
             if (string.IsNullOrWhiteSpace(key))
             {
                 throw new ArgumentNullException(nameof(key));
-            }
-
-            if (statusCode >= HttpStatusCode.BadRequest)
-            {
-                throw new ArgumentOutOfRangeException(nameof(key));
             }
 
             if (stream == null)
@@ -54,8 +55,18 @@ namespace Idempotency.Core
 
             using (var reader = new StreamReader(stream))
             {
-                return new IdempotencyRegister(key, (int) statusCode, reader.ReadToEnd());
+                return new IdempotencyRegister(key, reader.ReadToEnd());
             }
+        }
+
+        public static IdempotencyRegister Of(string key, string body)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            return new IdempotencyRegister(key, body);
         }
     }
 }

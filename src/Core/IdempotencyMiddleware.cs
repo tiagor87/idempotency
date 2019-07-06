@@ -25,7 +25,7 @@ namespace Idempotency.Core
             {
                 var logger = scope.ServiceProvider.GetService<ILogger>();
                 var repository = scope.ServiceProvider.GetService<IIdempotencyRepository>();
-                var keyReader = scope.ServiceProvider.GetService<IIdempotencyKeyReader>();
+                var keyReader = scope.ServiceProvider.GetService<IIdempotencyKeyReader<HttpRequest>>();
 
                 var idempotencyKey = keyReader.Read(context.Request);
 

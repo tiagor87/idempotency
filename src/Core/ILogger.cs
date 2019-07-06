@@ -1,13 +1,12 @@
 using System;
-using Microsoft.AspNetCore.Http;
 
 namespace Idempotency.Core
 {
-    public interface ILogger
+    public interface ILogger<TRequest, TResponse>
     {
-        void WriteRequest(string key, string message, HttpRequest request);
+        void WriteRequest(string key, string message, TRequest request);
         void WriteInformation(string key, string message);
         void WriteException(string key, Exception ex);
-        void WriteResponse(string key, string message, HttpResponse response);
+        void WriteResponse(string key, string message, TResponse response);
     }
 }
