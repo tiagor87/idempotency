@@ -2,7 +2,7 @@ using System;
 
 namespace Idempotency.Core
 {
-    public interface ILogger<TRequest, TResponse>
+    public interface ILogger<in TRequest, in TResponse>
     {
         void WriteRequest(string key, string message, TRequest request);
         void WriteInformation(string key, string message);

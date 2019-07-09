@@ -8,30 +8,32 @@ namespace Idempotency.Core
 {
     public class IdempotencyBehaviorPipeline<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     {
+        private readonly IIdempotencySerializer _idempotencySerializer;
         private readonly IIdempotencyKeyReader<TRequest> _keyReader;
         private readonly ILogger<TRequest, TResponse> _logger;
         private readonly IIdempotencyRepository _repository;
-        private readonly IIdempotencySerializer _idempotencySerializer;
 
         public IdempotencyBehaviorPipeline(IIdempotencyKeyReader<TRequest> keyReader,
             IIdempotencyRepository repository,
             IIdempotencySerializer idempotencySerializer,
             ILogger<TRequest, TResponse> logger = null)
         {
-            _keyReader = keyReader ?? throw new ArgumentNullException(nameof(keyReader));
+            _keyReader = keyReader;
             _logger = logger;
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _idempotencySerializer = idempotencySerializer ?? throw new ArgumentNullException(nameof(idempotencySerializer));
+            _idempotencySerializer =
+                idempotencySerializer ?? throw new ArgumentNullException(nameof(idempotencySerializer));
         }
 
-        public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
+        public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken,
+            RequestHandlerDelegate<TResponse> next)
         {
             var idempotencyKey = _keyReader.Read(request);
             if (string.IsNullOrWhiteSpace(idempotencyKey))
             {
                 return await next();
             }
-            
+
             TResponse response;
             _logger?.WriteInformation(idempotencyKey, "Idempotency: Key detected.");
             if (await _repository.TryAddAsync(idempotencyKey))
@@ -55,7 +57,8 @@ namespace Idempotency.Core
                     return response;
                 }
 
-                var updatedRegister = IdempotencyRegister.Of(idempotencyKey, _idempotencySerializer.Serialize(response));
+                var updatedRegister =
+                    IdempotencyRegister.Of(idempotencyKey, _idempotencySerializer.Serialize(response));
                 await _repository.UpdateAsync(idempotencyKey, updatedRegister);
                 _logger?.WriteInformation(idempotencyKey, "Idempotency: First request completed.");
                 return response;

@@ -67,7 +67,8 @@ namespace Idempotency.Core
                             return;
                         }
 
-                        var updatedRegister = HttpIdempotencyRegister.Of(idempotencyKey, (HttpStatusCode) context.Response.StatusCode, stream);
+                        var updatedRegister = HttpIdempotencyRegister.Of(idempotencyKey,
+                            (HttpStatusCode) context.Response.StatusCode, stream);
                         await repository.UpdateAsync(idempotencyKey, updatedRegister);
                         logger?.WriteInformation(idempotencyKey, "Idempotency: First request completed.");
                         return;
@@ -75,7 +76,7 @@ namespace Idempotency.Core
                 }
 
                 var register = await repository.GetAsync<HttpIdempotencyRegister>(idempotencyKey);
-                if (register.IsCompleted == false)
+                if (!register.IsCompleted)
                 {
                     context.Response.StatusCode = (int) HttpStatusCode.Conflict;
                     context.Response.ContentType = "application/json";
