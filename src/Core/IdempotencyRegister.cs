@@ -1,29 +1,34 @@
 using System;
-using System.IO;
-using System.Net;
 using ZeroFormatter;
 
 namespace Idempotency.Core
 {
     [ZeroFormattable]
-    public class IdempotencyRegister
+    public class IdempotencyRegister : IIdempotencyRegister
     {
         public IdempotencyRegister()
         {
         }
 
-        private IdempotencyRegister(string key, int? statusCode, string body) : this()
+        private IdempotencyRegister(string key, string value) : this()
         {
             Key = key;
-            StatusCode = statusCode;
-            Body = body;
+            IsCompleted = true;
+            Value = value;
+        }
+
+        private IdempotencyRegister(string key) : this()
+        {
+            Key = key;
+            IsCompleted = false;
+            Value = null;
         }
 
         [Index(0)] public virtual string Key { get; protected set; }
 
-        [Index(1)] public virtual int? StatusCode { get; protected set; }
+        [Index(1)] public virtual bool IsCompleted { get; protected set; }
 
-        [Index(2)] public virtual string Body { get; protected set; }
+        [Index(2)] public virtual string Value { get; protected set; }
 
         public static IdempotencyRegister Of(string key)
         {
@@ -32,30 +37,17 @@ namespace Idempotency.Core
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return new IdempotencyRegister(key, null, null);
+            return new IdempotencyRegister(key, null);
         }
 
-        public static IdempotencyRegister Of(string key, HttpStatusCode statusCode, Stream stream)
+        public static IdempotencyRegister Of(string key, string body)
         {
             if (string.IsNullOrWhiteSpace(key))
             {
                 throw new ArgumentNullException(nameof(key));
             }
 
-            if (statusCode >= HttpStatusCode.BadRequest)
-            {
-                throw new ArgumentOutOfRangeException(nameof(key));
-            }
-
-            if (stream == null)
-            {
-                throw new ArgumentNullException(nameof(stream));
-            }
-
-            using (var reader = new StreamReader(stream))
-            {
-                return new IdempotencyRegister(key, (int) statusCode, reader.ReadToEnd());
-            }
+            return new IdempotencyRegister(key, body);
         }
     }
 }

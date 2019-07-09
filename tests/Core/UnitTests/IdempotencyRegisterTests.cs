@@ -16,12 +16,13 @@ namespace Idempotency.Core.UnitTests
         [InlineData("just another key")]
         public void GivenIdempotencyRegisterWhenInstantiateShouldReturnsInstanceWithKeySet(string key)
         {
-            var register = IdempotencyRegister.Of(key);
+            var register = HttpIdempotencyRegister.Of(key);
 
             register.Should().NotBeNull();
             register.Key.Should().Be(key);
-            register.Body.Should().BeNull();
-            register.StatusCode.Should().BeNull();
+            register.Value.Should().BeNull();
+            register.IsCompleted.Should().BeFalse();
+            register.StatusCode.Should().Be(0);
         }
 
         [Trait("Category", "Validation")]
@@ -40,12 +41,13 @@ namespace Idempotency.Core.UnitTests
         {
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(body));
 
-            var register = IdempotencyRegister.Of(key, statusCode, stream);
+            var register = HttpIdempotencyRegister.Of(key, statusCode, stream);
 
             register.Should().NotBeNull();
             register.Key.Should().Be(key);
-            register.StatusCode.Should().Be((int) statusCode);
-            register.Body.Should().Be(body);
+            register.IsCompleted.Should().BeTrue();
+            register.Value.Should().Be(body);
+            register.StatusCode.Should().Be(statusCode);
         }
 
         [Trait("Category", "Validation")]
@@ -56,7 +58,7 @@ namespace Idempotency.Core.UnitTests
         [InlineData(" ")]
         public void GivenIdempotencyRegisterWhenInstantiateAndKeyIsEmptyShouldThrowsArgumentNullException(string key)
         {
-            Func<IdempotencyRegister> action = () => IdempotencyRegister.Of(key);
+            Func<IIdempotencyRegister> action = () => HttpIdempotencyRegister.Of(key);
 
             action.Should().Throw<ArgumentNullException>();
         }
@@ -71,7 +73,7 @@ namespace Idempotency.Core.UnitTests
             GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamAndKeyIsEmptyShouldThrowsArgumentNullException(
                 string key)
         {
-            Func<IdempotencyRegister> action = () => IdempotencyRegister.Of(key, HttpStatusCode.OK, new MemoryStream());
+            Func<IIdempotencyRegister> action = () => HttpIdempotencyRegister.Of(key, HttpStatusCode.OK, new MemoryStream());
 
             action.Should().Throw<ArgumentNullException>();
         }
@@ -117,12 +119,12 @@ namespace Idempotency.Core.UnitTests
         [InlineData(HttpStatusCode.NotExtended)]
         [InlineData(HttpStatusCode.NetworkAuthenticationRequired)]
         public void
-            GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamAndStatusCodeIsOutRangeShouldThrowsArgumentOutOfRangeException(
+            GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamAndStatusCodeIsOutRangeShouldThrowsArgumentException(
                 HttpStatusCode statusCode)
         {
-            Func<IdempotencyRegister> action = () => IdempotencyRegister.Of("key", statusCode, new MemoryStream());
+            Func<IIdempotencyRegister> action = () => HttpIdempotencyRegister.Of("key", statusCode, new MemoryStream());
 
-            action.Should().Throw<ArgumentOutOfRangeException>();
+            action.Should().Throw<ArgumentException>();
         }
 
         [Trait("Category", "Validation")]
@@ -131,7 +133,7 @@ namespace Idempotency.Core.UnitTests
         public void
             GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamAndStreamIsNullShouldThrowsArgumentNullException()
         {
-            Func<IdempotencyRegister> action = () => IdempotencyRegister.Of("key", HttpStatusCode.OK, null);
+            Func<IIdempotencyRegister> action = () => HttpIdempotencyRegister.Of("key", HttpStatusCode.OK, null);
 
             action.Should().Throw<ArgumentNullException>();
         }

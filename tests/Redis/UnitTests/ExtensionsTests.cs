@@ -29,19 +29,19 @@ namespace Idempotency.Redis.UnitTests
         public async Task GivenApplicationBuilderWhenUseIdempotencyShouldRegisterMiddleware()
         {
             var key = Guid.NewGuid().ToString();
-            var loggerMock = new Mock<ILogger>();
+            var loggerMock = new Mock<ILogger<HttpRequest, HttpResponse>>();
             loggerMock.Setup(x =>
                     x.WriteRequest(It.Is<string>(y => y.Contains(key)), It.IsAny<string>(), It.IsAny<HttpRequest>()))
                 .Verifiable();
             var client = _factory
                 .WithWebHostBuilder(builder =>
                 {
-                    builder.ConfigureTestServices(services => services.AddScoped<ILogger>(_ => loggerMock.Object));
+                    builder.ConfigureTestServices(services => services.AddScoped(_ => loggerMock.Object));
                 })
                 .CreateClient();
 
             var request = new HttpRequestMessage(HttpMethod.Post, "/test");
-            request.Headers.Add(IdempotencyKeyReader.IDEMPOTENCY_KEY, key);
+            request.Headers.Add(HttpRequestIdempotencyKeyReader.IDEMPOTENCY_KEY, key);
             request.Content = new StringContent("{}", Encoding.UTF8, MediaTypeNames.Application.Json);
             var response = await client.SendAsync(request);
 
@@ -55,13 +55,16 @@ namespace Idempotency.Redis.UnitTests
         {
             _factory.CreateClient();
 
-            var keyReader = _factory.Server.Host.Services.GetService<IIdempotencyKeyReader>();
+            var keyReader = _factory.Server.Host.Services.GetService<IIdempotencyKeyReader<HttpRequest>>();
             var repository = _factory.Server.Host.Services.GetService<IIdempotencyRepository>();
+            var serializer = _factory.Server.Host.Services.GetService<IIdempotencySerializer>();
 
             keyReader.Should().NotBeNull()
-                .And.BeOfType<IdempotencyKeyReader>();
+                .And.BeOfType<HttpRequestIdempotencyKeyReader>();
             repository.Should().NotBeNull()
                 .And.BeOfType<IdempotencyRepository>();
+            serializer.Should().NotBeNull()
+                .And.BeOfType<IdemportencySerializer>();
         }
     }
 }

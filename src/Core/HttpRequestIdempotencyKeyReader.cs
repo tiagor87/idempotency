@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Idempotency.Core
 {
-    public class IdempotencyKeyReader : IIdempotencyKeyReader
+    public class HttpRequestIdempotencyKeyReader : IIdempotencyKeyReader<HttpRequest>
     {
         public const string IDEMPOTENCY_KEY = "Idempotency-Key";
 

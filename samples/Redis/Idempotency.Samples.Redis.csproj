@@ -6,10 +6,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Idempotency.Redis" Version="0.0.5"/>
-        <PackageReference Include="Microsoft.AspNetCore.App"/>
-        <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All"/>
-        <PackageReference Include="ServiceStack.Redis.Core" Version="5.5.0"/>
+        <PackageReference Include="MediatR" Version="7.0.0"/>
+        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Core\Idempotency.Core.csproj" />
+      <ProjectReference Include="..\..\src\Redis\Idempotency.Redis.csproj" />
     </ItemGroup>
 
 </Project>
