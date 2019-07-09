@@ -6,15 +6,15 @@ using Xunit;
 
 namespace Idempotency.Core.UnitTests
 {
-    public class IdempotencyKeyReaderTests
+    public class HttpRequestIdempotencyKeyReaderTests
     {
-        public IdempotencyKeyReaderTests()
+        public HttpRequestIdempotencyKeyReaderTests()
         {
             _requestMock = new Mock<HttpRequest>();
-            _keyReader = new IdempotencyKeyReader();
+            _keyReader = new HttpRequestIdempotencyKeyReader();
         }
 
-        private readonly IdempotencyKeyReader _keyReader;
+        private readonly HttpRequestIdempotencyKeyReader _keyReader;
         private readonly Mock<HttpRequest> _requestMock;
 
         [Trait("Category", "Cases")]
@@ -28,9 +28,9 @@ namespace Idempotency.Core.UnitTests
         {
             var key = Guid.NewGuid().ToString();
             _requestMock.SetupGet(x => x.Headers.Keys)
-                .Returns(new[] {IdempotencyKeyReader.IDEMPOTENCY_KEY})
+                .Returns(new[] {HttpRequestIdempotencyKeyReader.IDEMPOTENCY_KEY})
                 .Verifiable();
-            _requestMock.SetupGet(x => x.Headers[IdempotencyKeyReader.IDEMPOTENCY_KEY])
+            _requestMock.SetupGet(x => x.Headers[HttpRequestIdempotencyKeyReader.IDEMPOTENCY_KEY])
                 .Returns(key)
                 .Verifiable();
             _requestMock.SetupGet(x => x.Path)
@@ -57,9 +57,9 @@ namespace Idempotency.Core.UnitTests
         public void GivenRequestWhenIdempotencyKeyAvaiableShouldSearchAsCaseInsensitive(string key)
         {
             _requestMock.SetupGet(x => x.Headers.Keys)
-                .Returns(new[] {IdempotencyKeyReader.IDEMPOTENCY_KEY})
+                .Returns(new[] {HttpRequestIdempotencyKeyReader.IDEMPOTENCY_KEY})
                 .Verifiable();
-            _requestMock.SetupGet(x => x.Headers[IdempotencyKeyReader.IDEMPOTENCY_KEY])
+            _requestMock.SetupGet(x => x.Headers[HttpRequestIdempotencyKeyReader.IDEMPOTENCY_KEY])
                 .Returns(key)
                 .Verifiable();
             _requestMock.SetupGet(x => x.Method)
@@ -82,9 +82,9 @@ namespace Idempotency.Core.UnitTests
         public void GivenRequestWhenIdempotencyKeyAvaiableAndValueIsEmptyShouldReturnsNull(string value)
         {
             _requestMock.SetupGet(x => x.Headers.Keys)
-                .Returns(new string[] {IdempotencyKeyReader.IDEMPOTENCY_KEY})
+                .Returns(new string[] {HttpRequestIdempotencyKeyReader.IDEMPOTENCY_KEY})
                 .Verifiable();
-            _requestMock.SetupGet(x => x.Headers[IdempotencyKeyReader.IDEMPOTENCY_KEY])
+            _requestMock.SetupGet(x => x.Headers[HttpRequestIdempotencyKeyReader.IDEMPOTENCY_KEY])
                 .Returns(value)
                 .Verifiable();
 

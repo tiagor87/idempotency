@@ -8,9 +8,11 @@
         <PackageProjectUrl>https://github.com/tiagor87/idempotency</PackageProjectUrl>
         <RepositoryUrl>https://github.com/tiagor87/idempotency</RepositoryUrl>
         <PackageTags>idempotency dotnet c# netcore</PackageTags>
+        <LangVersion>7.1</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="MediatR" Version="7.0.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0"/>

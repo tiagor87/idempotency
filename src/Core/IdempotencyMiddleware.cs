@@ -23,7 +23,7 @@ namespace Idempotency.Core
         {
             using (var scope = _serviceScopeFactory.CreateScope())
             {
-                var logger = scope.ServiceProvider.GetService<ILogger>();
+                var logger = scope.ServiceProvider.GetService<ILogger<HttpRequest, HttpResponse>>();
                 var repository = scope.ServiceProvider.GetService<IIdempotencyRepository>();
                 var keyReader = scope.ServiceProvider.GetService<IIdempotencyKeyReader<HttpRequest>>();
 
@@ -67,17 +67,15 @@ namespace Idempotency.Core
                             return;
                         }
 
-                        var updatedRegister = IdempotencyRegister.Of(idempotencyKey,
-                            (HttpStatusCode) context.Response.StatusCode,
-                            stream);
+                        var updatedRegister = HttpIdempotencyRegister.Of(idempotencyKey, (HttpStatusCode) context.Response.StatusCode, stream);
                         await repository.UpdateAsync(idempotencyKey, updatedRegister);
                         logger?.WriteInformation(idempotencyKey, "Idempotency: First request completed.");
                         return;
                     }
                 }
 
-                var register = await repository.GetAsync(idempotencyKey);
-                if (register.StatusCode == null)
+                var register = await repository.GetAsync<HttpIdempotencyRegister>(idempotencyKey);
+                if (register.IsCompleted == false)
                 {
                     context.Response.StatusCode = (int) HttpStatusCode.Conflict;
                     context.Response.ContentType = "application/json";
@@ -85,9 +83,9 @@ namespace Idempotency.Core
                     return;
                 }
 
-                context.Response.StatusCode = register.StatusCode.Value;
+                context.Response.StatusCode = (int) register.StatusCode;
                 context.Response.ContentType = "application/json";
-                using (var body = new MemoryStream(Encoding.UTF8.GetBytes(register.Body)))
+                using (var body = new MemoryStream(Encoding.UTF8.GetBytes(register.Value)))
                 {
                     await body.CopyToAsync(context.Response.Body);
                 }

@@ -17,27 +17,27 @@ namespace Idempotency.Core.UnitTests
         public IdempotencyMiddlewareTests()
         {
             _nextMock = new Mock<RequestDelegate>(MockBehavior.Strict);
-            _loggerMock = new Mock<ILogger>();
+            _loggerMock = new Mock<ILogger<HttpRequest, HttpResponse>>();
             _repositoryMock = new Mock<IIdempotencyRepository>();
-            _keyReaderMock = new Mock<IIdempotencyKeyReader>();
+            _keyReaderMock = new Mock<IIdempotencyKeyReader<HttpRequest>>();
             var serviceScopeFactoryMock = new Mock<IServiceScopeFactory>();
             var serviceScopeMock = new Mock<IServiceScope>();
             serviceScopeFactoryMock.Setup(x => x.CreateScope())
                 .Returns(serviceScopeMock.Object);
-            serviceScopeMock.Setup(x => x.ServiceProvider.GetService(typeof(ILogger)))
+            serviceScopeMock.Setup(x => x.ServiceProvider.GetService(typeof(ILogger<HttpRequest, HttpResponse>)))
                 .Returns(_loggerMock.Object);
             serviceScopeMock.Setup(x => x.ServiceProvider.GetService(typeof(IIdempotencyRepository)))
                 .Returns(_repositoryMock.Object);
-            serviceScopeMock.Setup(x => x.ServiceProvider.GetService(typeof(IIdempotencyKeyReader)))
+            serviceScopeMock.Setup(x => x.ServiceProvider.GetService(typeof(IIdempotencyKeyReader<HttpRequest>)))
                 .Returns(_keyReaderMock.Object);
             _middleware = new IdempotencyMiddleware(_nextMock.Object, serviceScopeFactoryMock.Object);
         }
 
         private readonly IdempotencyMiddleware _middleware;
         private readonly Mock<RequestDelegate> _nextMock;
-        private readonly Mock<ILogger> _loggerMock;
+        private readonly Mock<ILogger<HttpRequest, HttpResponse>> _loggerMock;
         private readonly Mock<IIdempotencyRepository> _repositoryMock;
-        private readonly Mock<IIdempotencyKeyReader> _keyReaderMock;
+        private readonly Mock<IIdempotencyKeyReader<HttpRequest>> _keyReaderMock;
 
         [Trait("Category", "Cases")]
         [Theory(DisplayName =
@@ -145,7 +145,7 @@ namespace Idempotency.Core.UnitTests
         public async Task GivenRequestWhenConflicShouldLogKeyDetectedAndConflict()
         {
             var idempotencyKey = Guid.NewGuid().ToString();
-            var idempotencyRegister = IdempotencyRegister.Of(idempotencyKey);
+            var idempotencyRegister = HttpIdempotencyRegister.Of(idempotencyKey);
             var contextMock = new Mock<HttpContext>();
             var responseMock = new Mock<HttpResponse>();
             _keyReaderMock.Setup(x => x.Read(It.IsAny<HttpRequest>()))
@@ -164,7 +164,7 @@ namespace Idempotency.Core.UnitTests
             _repositoryMock.Setup(x => x.TryAddAsync(idempotencyKey))
                 .ReturnsAsync(false)
                 .Verifiable();
-            _repositoryMock.Setup(x => x.GetAsync(idempotencyKey))
+            _repositoryMock.Setup(x => x.GetAsync<HttpIdempotencyRegister>(idempotencyKey))
                 .ReturnsAsync(idempotencyRegister)
                 .Verifiable();
             _loggerMock.Setup(x => x.WriteInformation(idempotencyKey, "Idempotency: Key detected."))
@@ -260,7 +260,7 @@ namespace Idempotency.Core.UnitTests
             _repositoryMock.Setup(x => x.TryAddAsync(idempotencyKey))
                 .ReturnsAsync(true)
                 .Verifiable();
-            _repositoryMock.Setup(x => x.UpdateAsync(idempotencyKey, It.IsAny<IdempotencyRegister>()))
+            _repositoryMock.Setup(x => x.UpdateAsync(idempotencyKey, It.IsAny<IIdempotencyRegister>()))
                 .Returns(Task.CompletedTask)
                 .Verifiable();
             _nextMock.Setup(x => x.Invoke(contextMock.Object))
@@ -306,7 +306,7 @@ namespace Idempotency.Core.UnitTests
             _repositoryMock.Setup(x => x.TryAddAsync(idempotencyKey))
                 .ReturnsAsync(true)
                 .Verifiable();
-            _repositoryMock.Setup(x => x.UpdateAsync(idempotencyKey, It.IsAny<IdempotencyRegister>()))
+            _repositoryMock.Setup(x => x.UpdateAsync(idempotencyKey, It.IsAny<IIdempotencyRegister>()))
                 .Returns(Task.CompletedTask)
                 .Verifiable();
             _nextMock.Setup(x => x.Invoke(contextMock.Object))
@@ -334,7 +334,7 @@ namespace Idempotency.Core.UnitTests
         public async Task GivenRequestWhenHasResponseShouldLogKeyDetectedAndResponseFromCache()
         {
             var idempotencyKey = Guid.NewGuid().ToString();
-            var idempotencyRegister = IdempotencyRegister.Of(
+            var idempotencyRegister = HttpIdempotencyRegister.Of(
                 idempotencyKey,
                 HttpStatusCode.OK,
                 new MemoryStream(Encoding.UTF8.GetBytes("Message cached.")));
@@ -360,7 +360,7 @@ namespace Idempotency.Core.UnitTests
             _repositoryMock.Setup(x => x.TryAddAsync(idempotencyKey))
                 .ReturnsAsync(false)
                 .Verifiable();
-            _repositoryMock.Setup(x => x.GetAsync(idempotencyKey))
+            _repositoryMock.Setup(x => x.GetAsync<HttpIdempotencyRegister>(idempotencyKey))
                 .ReturnsAsync(idempotencyRegister)
                 .Verifiable();
             _loggerMock.Setup(x => x.WriteInformation(idempotencyKey, "Idempotency: Key detected."))
@@ -421,7 +421,7 @@ namespace Idempotency.Core.UnitTests
             GivenRequestWhenIdempotencyKeyAvaiableAndFaildSaveKeyAndDoesntHaveResponseShouldReturnStatusCode409()
         {
             var idempotencyKey = Guid.NewGuid().ToString();
-            var idempotencyRegister = IdempotencyRegister.Of(idempotencyKey);
+            var idempotencyRegister = HttpIdempotencyRegister.Of(idempotencyKey);
             var contextMock = new Mock<HttpContext>();
             _keyReaderMock.Setup(x => x.Read(It.IsAny<HttpRequest>()))
                 .Returns(idempotencyKey)
@@ -436,7 +436,7 @@ namespace Idempotency.Core.UnitTests
             _repositoryMock.Setup(x => x.TryAddAsync(idempotencyKey))
                 .ReturnsAsync(false)
                 .Verifiable();
-            _repositoryMock.Setup(x => x.GetAsync(idempotencyKey))
+            _repositoryMock.Setup(x => x.GetAsync<HttpIdempotencyRegister>(idempotencyKey))
                 .ReturnsAsync(idempotencyRegister)
                 .Verifiable();
 
@@ -454,7 +454,7 @@ namespace Idempotency.Core.UnitTests
         public async Task GivenRequestWhenIdempotencyKeyAvaiableAndFailsSaveKeyAndHasResponseShouldReturnResponse()
         {
             var idempotencyKey = Guid.NewGuid().ToString();
-            var idempotencyRegister = IdempotencyRegister.Of(
+            var idempotencyRegister = HttpIdempotencyRegister.Of(
                 idempotencyKey,
                 HttpStatusCode.OK,
                 new MemoryStream(Encoding.UTF8.GetBytes("Successful saved message")));
@@ -476,7 +476,7 @@ namespace Idempotency.Core.UnitTests
             _repositoryMock.Setup(x => x.TryAddAsync(idempotencyKey))
                 .ReturnsAsync(false)
                 .Verifiable();
-            _repositoryMock.Setup(x => x.GetAsync(idempotencyKey))
+            _repositoryMock.Setup(x => x.GetAsync<HttpIdempotencyRegister>(idempotencyKey))
                 .ReturnsAsync(idempotencyRegister)
                 .Verifiable();
 
@@ -539,7 +539,7 @@ namespace Idempotency.Core.UnitTests
             _repositoryMock.Setup(x => x.TryAddAsync(idempotencyKey))
                 .ReturnsAsync(true)
                 .Verifiable();
-            _repositoryMock.Setup(x => x.UpdateAsync(idempotencyKey, It.IsAny<IdempotencyRegister>()))
+            _repositoryMock.Setup(x => x.UpdateAsync(idempotencyKey, It.IsAny<IIdempotencyRegister>()))
                 .Returns(Task.CompletedTask)
                 .Verifiable();
             _nextMock.Setup(x => x.Invoke(contextMock.Object))

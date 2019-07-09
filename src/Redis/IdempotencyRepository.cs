@@ -11,10 +11,12 @@ namespace Idempotency.Redis
     public class IdempotencyRepository : IIdempotencyRepository
     {
         private readonly IDatabase _database;
+        private readonly IIdempotencySerializer _serializer;
 
-        public IdempotencyRepository(IDatabase database)
+        public IdempotencyRepository(IDatabase database, IIdempotencySerializer serializer)
         {
             _database = database ?? throw new ArgumentNullException(nameof(database));
+            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
 
         public async Task<bool> TryAddAsync(string key)
@@ -25,28 +27,29 @@ namespace Idempotency.Redis
             }
 
             using (var factory = RedLockFactory.Create(new[] {new RedLockMultiplexer(_database.Multiplexer)}))
-            using (factory.CreateLock(key, TimeSpan.FromMinutes(1)))
+            using (var redLock = factory.CreateLock(key, TimeSpan.FromMinutes(1)))
             {
-                if (await _database.KeyExistsAsync((RedisKey) key))
+                if (!redLock.IsAcquired || await _database.KeyExistsAsync((RedisKey) key))
                 {
                     return false;
                 }
 
-                var value = Convert.ToBase64String(ZeroFormatterSerializer.Serialize(IdempotencyRegister.Of(key)));
+                var value = _serializer.Serialize(IdempotencyRegister.Of(key));
                 return await _database.StringSetAsync(key, value, TimeSpan.FromMinutes(1), When.NotExists);
             }
         }
 
-        public async Task UpdateAsync(string key, IdempotencyRegister register)
+        public async Task UpdateAsync(string key, IIdempotencyRegister register)
         {
-            var value = Convert.ToBase64String(ZeroFormatterSerializer.Serialize(register));
+            var value = _serializer.Serialize(register);
             await _database.StringSetAsync(key, value, TimeSpan.FromDays(1), When.Exists);
         }
 
-        public async Task<IdempotencyRegister> GetAsync(string key)
+        public async Task<T> GetAsync<T>(string key)
+        where T : IIdempotencyRegister
         {
             var value = await _database.StringGetAsync(key);
-            return ZeroFormatterSerializer.Deserialize<IdempotencyRegister>(Convert.FromBase64String(value));
+            return _serializer.Deserialize<T>(value);
         }
 
         public async Task RemoveAsync(string key)
