@@ -37,7 +37,7 @@ namespace Idempotency.Core
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return new IdempotencyRegister(key, null);
+            return new IdempotencyRegister(key);
         }
 
         public static IdempotencyRegister Of(string key, string body)
