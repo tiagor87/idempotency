@@ -13,7 +13,7 @@ namespace Idempotency.Core
         public HttpIdempotencyRegister()
         {
         }
-        
+
         private HttpIdempotencyRegister(string key, HttpStatusCode statusCode, string value)
         {
             Key = key;
@@ -29,13 +29,14 @@ namespace Idempotency.Core
             Value = null;
         }
 
+        [Index(3)] public virtual HttpStatusCode StatusCode { get; protected set; }
+
         [Index(0)] public virtual string Key { get; protected set; }
 
         [Index(1)] public virtual bool IsCompleted { get; protected set; }
         [Index(2)] public virtual string Value { get; protected set; }
-        [Index(3)] public virtual HttpStatusCode StatusCode { get; protected set; }
-        
-        public static HttpIdempotencyRegister Of(string key, HttpStatusCode statusCode, Stream stream)
+
+        public static HttpIdempotencyRegister Of(string key, HttpStatusCode statusCode, Stream response)
         {
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -47,17 +48,22 @@ namespace Idempotency.Core
                 throw new ArgumentException("The status code should be a success.", nameof(statusCode));
             }
 
-            if (stream == null)
+            if (response == null)
             {
-                throw new ArgumentNullException(nameof(stream));
+                throw new ArgumentNullException(nameof(response));
             }
 
+            using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             {
+                response.CopyTo(stream);
+                response.Seek(0, SeekOrigin.Begin);
+                stream.Seek(0, SeekOrigin.Begin);
+                reader.DiscardBufferedData();
                 return new HttpIdempotencyRegister(key, statusCode, reader.ReadToEnd());
             }
         }
-        
+
         public static HttpIdempotencyRegister Of(string key)
         {
             if (string.IsNullOrWhiteSpace(key))

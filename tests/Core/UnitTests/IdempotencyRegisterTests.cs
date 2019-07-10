@@ -73,7 +73,8 @@ namespace Idempotency.Core.UnitTests
             GivenIdempotencyRegisterWhenInstantiateWithStatusCodeAndStreamAndKeyIsEmptyShouldThrowsArgumentNullException(
                 string key)
         {
-            Func<IIdempotencyRegister> action = () => HttpIdempotencyRegister.Of(key, HttpStatusCode.OK, new MemoryStream());
+            Func<IIdempotencyRegister> action = () =>
+                HttpIdempotencyRegister.Of(key, HttpStatusCode.OK, new MemoryStream());
 
             action.Should().Throw<ArgumentNullException>();
         }
@@ -125,6 +126,18 @@ namespace Idempotency.Core.UnitTests
             Func<IIdempotencyRegister> action = () => HttpIdempotencyRegister.Of("key", statusCode, new MemoryStream());
 
             action.Should().Throw<ArgumentException>();
+        }
+
+        [Trait("Category", "Cases")]
+        [Fact(DisplayName = "GIVEN IdempotencyRegister, WHEN instantiate, SHOULD rewind response stream")]
+        public void GivenIdempotencyRegisterWhenInstantiateShouldRewindResponseStream()
+        {
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes("Message"));
+
+            var register = HttpIdempotencyRegister.Of("key", HttpStatusCode.OK, stream);
+
+            register.Value.Should().Be("Message");
+            new StreamReader(stream).ReadToEnd().Should().Be("Message");
         }
 
         [Trait("Category", "Validation")]
