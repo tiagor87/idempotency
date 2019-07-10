@@ -4,7 +4,6 @@ using Idempotency.Core;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
-using ZeroFormatter;
 
 namespace Idempotency.Redis
 {
@@ -39,14 +38,15 @@ namespace Idempotency.Redis
             }
         }
 
-        public async Task UpdateAsync(string key, IIdempotencyRegister register)
+        public async Task UpdateAsync<T>(string key, T register)
+            where T : IIdempotencyRegister
         {
             var value = _serializer.Serialize(register);
             await _database.StringSetAsync(key, value, TimeSpan.FromDays(1), When.Exists);
         }
 
         public async Task<T> GetAsync<T>(string key)
-        where T : IIdempotencyRegister
+            where T : IIdempotencyRegister
         {
             var value = await _database.StringGetAsync(key);
             return _serializer.Deserialize<T>(value);
