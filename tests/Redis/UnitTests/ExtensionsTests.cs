@@ -64,7 +64,7 @@ namespace Idempotency.Redis.UnitTests
             repository.Should().NotBeNull()
                 .And.BeOfType<IdempotencyRepository>();
             serializer.Should().NotBeNull()
-                .And.BeOfType<IdemportencySerializer>();
+                .And.BeOfType<IdempotencySerializer>();
         }
     }
 }

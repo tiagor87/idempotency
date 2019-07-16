@@ -33,7 +33,7 @@ namespace Idempotency.Samples.Redis
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddRedisIdempotency(Configuration);
-            services.AddRedisBehaviorPipeline(Configuration);
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(IdempotencyPipelineBehavior<,>));
             services.AddScoped<IIdempotencyKeyReader<IncrementCounter>, IncrementCounterKeyReader>();
             services.AddScoped<IIdempotencySerializer, NewtonsoftIdempotencySerializer>();
             

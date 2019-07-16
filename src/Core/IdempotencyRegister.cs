@@ -10,10 +10,10 @@ namespace Idempotency.Core
         {
         }
 
-        private IdempotencyRegister(string key, string value) : this()
+        private IdempotencyRegister(string key, bool isCompleted, string value) : this()
         {
             Key = key;
-            IsCompleted = true;
+            IsCompleted = isCompleted;
             Value = value;
         }
 
@@ -47,7 +47,7 @@ namespace Idempotency.Core
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return new IdempotencyRegister(key, body);
+            return new IdempotencyRegister(key, true, body);
         }
     }
 }

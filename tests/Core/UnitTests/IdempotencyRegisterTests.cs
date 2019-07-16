@@ -128,6 +128,32 @@ namespace Idempotency.Core.UnitTests
             action.Should().Throw<ArgumentException>();
         }
 
+        [Trait("Category", "Validation")]
+        [Theory(DisplayName = "GIVEN IdempotencyRegister, WHEN key is empty, SHOULD throw argument null exception.")]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void GivenIdempotencyRegisterWhenKeyIsEmptyShouldThrow(string key)
+        {
+            Func<IdempotencyRegister> action1 = () => IdempotencyRegister.Of(key, "body");
+            Func<IdempotencyRegister> action2 = () => IdempotencyRegister.Of(key);
+
+            action1.Should().Throw<ArgumentNullException>();
+            action2.Should().Throw<ArgumentNullException>();
+        }
+
+        [Trait("Category", "Validation")]
+        [Fact(DisplayName = "GIVEN IdempotencyRegister, SHOULD instantiate with key and body.")]
+        public void GivenIdempotencyRegisterShouldInstantiateWithKeyAndValue()
+        {
+            var register = IdempotencyRegister.Of("key", "body");
+
+            register.Should().NotBeNull();
+            register.Key.Should().Be("key");
+            register.Value.Should().Be("body");
+            register.IsCompleted.Should().BeTrue();
+        }
+
         [Trait("Category", "Cases")]
         [Fact(DisplayName = "GIVEN IdempotencyRegister, WHEN instantiate, SHOULD rewind response stream")]
         public void GivenIdempotencyRegisterWhenInstantiateShouldRewindResponseStream()

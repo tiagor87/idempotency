@@ -3,7 +3,7 @@ using ZeroFormatter;
 
 namespace Idempotency.Core
 {
-    public class IdemportencySerializer : IIdempotencySerializer
+    public class IdempotencySerializer : IIdempotencySerializer
     {
         public string Serialize<T>(T instance)
         {

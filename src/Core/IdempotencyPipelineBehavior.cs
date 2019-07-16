@@ -6,14 +6,14 @@ using ResultCore;
 
 namespace Idempotency.Core
 {
-    public class IdempotencyBehaviorPipeline<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class IdempotencyPipelineBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     {
         private readonly IIdempotencySerializer _idempotencySerializer;
         private readonly IIdempotencyKeyReader<TRequest> _keyReader;
         private readonly ILogger<TRequest, TResponse> _logger;
         private readonly IIdempotencyRepository _repository;
 
-        public IdempotencyBehaviorPipeline(IIdempotencyKeyReader<TRequest> keyReader,
+        public IdempotencyPipelineBehavior(IIdempotencyKeyReader<TRequest> keyReader,
             IIdempotencyRepository repository,
             IIdempotencySerializer idempotencySerializer,
             ILogger<TRequest, TResponse> logger = null)
@@ -28,7 +28,7 @@ namespace Idempotency.Core
         public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken,
             RequestHandlerDelegate<TResponse> next)
         {
-            var idempotencyKey = _keyReader.Read(request);
+            var idempotencyKey = _keyReader?.Read(request);
             if (string.IsNullOrWhiteSpace(idempotencyKey))
             {
                 return await next();

@@ -418,7 +418,7 @@ namespace Idempotency.Core.UnitTests
         [Fact(DisplayName =
             @"GIVEN Request, WHEN Idempotency-Key is avaiable AND fails to save key AND doesn't have response, SHOULD return StatusCode 409 - Conflict")]
         public async Task
-            GivenRequestWhenIdempotencyKeyAvaiableAndFaildSaveKeyAndDoesntHaveResponseShouldReturnStatusCode409()
+            GivenRequestWhenIdempotencyKeyAvaiableAndFailsSaveKeyAndDoesntHaveResponseShouldReturnStatusCode409()
         {
             var idempotencyKey = Guid.NewGuid().ToString();
             var idempotencyRegister = HttpIdempotencyRegister.Of(idempotencyKey);
