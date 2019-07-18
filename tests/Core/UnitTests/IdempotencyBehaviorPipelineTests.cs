@@ -61,48 +61,6 @@ namespace Idempotency.Core.UnitTests
         }
 
         [Trait("Category", "Cases")]
-        [Theory(DisplayName = @"GIVEN Request, WHEN KeyReader isn't avaiable, SHOULD call application")]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData(" ")]
-        public async Task GivenRequestWhenKeyReaderNotAvaiableShouldCallApplication(string key)
-        {
-            var pipeline = new IdempotencyPipelineBehavior<IRequest<IResult>, IResult>(
-                null,
-                _repositoryMock.Object,
-                _serializerMock.Object,
-                _loggerMock.Object);
-
-            _nextMock.Setup(x => x.Invoke())
-                .ReturnsAsync(Result.Success())
-                .Verifiable();
-
-            var result = await pipeline.Handle(
-                _requestMock.Object,
-                CancellationToken.None,
-                _nextMock.Object);
-
-            result.Should().NotBeNull();
-            result.Successful.Should().BeTrue();
-
-            _repositoryMock.Verify(x => x.TryAddAsync(It.IsAny<string>()), Times.Never());
-            _nextMock.VerifyAll();
-        }
-
-        [Trait("Category", "Logging")]
-        [Fact(DisplayName = "GIVEN Request, WHEN conflict, SHOULD log key detected, AND conflict")]
-        public async Task GivenRequestWhenConflicShouldLogKeyDetectedAndConflict()
-        {
-        }
-
-        [Trait("Category", "Logging")]
-        [Fact(DisplayName =
-            "GIVEN Request, WHEN execution failed, SHOULD log key detected, AND first request, AND first request failed")]
-        public async Task GivenRequestWhenExecutionFailedShouldLogKeyDetectedAndFirstRequestAndRequestFailed()
-        {
-        }
-
-        [Trait("Category", "Cases")]
         [Fact(DisplayName =
             @"GIVEN Request, WHEN execution fails, SHOULD remove key")]
         public async Task GivenRequestWhenExecutionFailsShouldRemoveKey()
@@ -132,19 +90,6 @@ namespace Idempotency.Core.UnitTests
             _keyReaderMock.VerifyAll();
             _nextMock.VerifyAll();
             _repositoryMock.VerifyAll();
-        }
-
-        [Trait("Category", "Logging")]
-        [Fact(DisplayName =
-            "GIVEN Request, WHEN execution successful, SHOULD log key detected, AND first request, AND first request completed")]
-        public async Task GivenRequestWhenExecutionSuccessfulShouldLogKeyDetectedAndFirstRequestAndRequestCompleted()
-        {
-        }
-
-        [Trait("Category", "Logging")]
-        [Fact(DisplayName = "GIVEN Request, WHEN has response, SHOULD log key detected, AND Response from cache")]
-        public async Task GivenRequestWhenHasResponseShouldLogKeyDetectedAndResponseFromCache()
-        {
         }
 
         [Trait("Category", "Cases")]
@@ -269,6 +214,32 @@ namespace Idempotency.Core.UnitTests
 
             _keyReaderMock.VerifyAll();
             _repositoryMock.VerifyAll();
+            _nextMock.VerifyAll();
+        }
+
+        [Trait("Category", "Cases")]
+        [Fact(DisplayName = @"GIVEN Request, WHEN KeyReader isn't avaiable, SHOULD call application")]
+        public async Task GivenRequestWhenKeyReaderNotAvaiableShouldCallApplication()
+        {
+            var pipeline = new IdempotencyPipelineBehavior<IRequest<IResult>, IResult>(
+                null,
+                _repositoryMock.Object,
+                _serializerMock.Object,
+                _loggerMock.Object);
+
+            _nextMock.Setup(x => x.Invoke())
+                .ReturnsAsync(Result.Success())
+                .Verifiable();
+
+            var result = await pipeline.Handle(
+                _requestMock.Object,
+                CancellationToken.None,
+                _nextMock.Object);
+
+            result.Should().NotBeNull();
+            result.Successful.Should().BeTrue();
+
+            _repositoryMock.Verify(x => x.TryAddAsync(It.IsAny<string>()), Times.Never());
             _nextMock.VerifyAll();
         }
     }
